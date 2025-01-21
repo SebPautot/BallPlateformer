@@ -32,3 +32,11 @@ void AMyBall::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
+void AMyBall::Move(FVector& MovementVector)
+{
+	//TODO add force
+}
+
+void AMyBall::Jump()
+{
+}

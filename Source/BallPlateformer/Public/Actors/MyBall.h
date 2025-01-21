@@ -6,6 +6,8 @@
 #include "GameFramework/Pawn.h"
 #include "MyBall.generated.h"
 
+class UStaticMeshComponent;
+
 UCLASS()
 class BALLPLATEFORMER_API AMyBall : public APawn
 {
@@ -19,6 +21,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UStaticMeshComponent MeshComponent;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -26,4 +30,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void Move(FVector& MovementVector);
+
+	void Jump();
 };
