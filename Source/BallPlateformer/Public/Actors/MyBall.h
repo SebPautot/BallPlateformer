@@ -32,7 +32,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 	UFUNCTION()
-	void Move(FVector& MovementVector);
+	void Move(const FVector2D& MovementVector);
 	
 	UFUNCTION()
 	void Jump();
@@ -40,20 +40,30 @@ public:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UPROPERTY(EditAnywhere, Category = "Ball|Gravity")
+	float GravityMultiplier = 2.0f;
+
 	UPROPERTY(EditAnywhere, Category = "Ball|Ground Movement")
 	float GroundSpeed = 1000.0f;
+	UPROPERTY(EditAnywhere, Category = "Ball|Ground Movement")
 	bool isUsingMaxGroundSpeed = true;
+	UPROPERTY(EditAnywhere, Category = "Ball|Ground Movement")
 	float maxGroundSpeed = 25.f;
+	UPROPERTY(EditAnywhere, Category = "Ball|Ground Movement")
 	float groundDesceleration = 10.f;
 
 	UPROPERTY(EditAnywhere, Category = "Ball|Air Movement")
 	float AirSpeed = 1000.0f;
+	UPROPERTY(EditAnywhere, Category = "Ball|Air Movement")
 	bool isUsingMaxAirSpeed = true;
+	UPROPERTY(EditAnywhere, Category = "Ball|Air Movement")
 	float maxAirSpeed = 25.f;
+	UPROPERTY(EditAnywhere, Category = "Ball|Air Movement")
 	float airDesceleration = 10.f;
 
 	UPROPERTY(EditAnywhere, Category = "Ball|Jump")
 	float JumpHeight = 1000.0f;
+	UPROPERTY(EditAnywhere, Category = "Ball|Jump")
 	float DoubleJumpHeight = 1000.0f;
 
 private:

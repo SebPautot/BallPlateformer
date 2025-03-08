@@ -29,15 +29,18 @@ void AMyPlayerController::SetupInputComponent()
     if (UEnhancedInputComponent *EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
     {
         UE_LOG(LogTemp, Warning, TEXT("input function loaded"));
-        EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AMyPlayerController::Move);
         EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AMyPlayerController::Jump);
+        //Movement
+        EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AMyPlayerController::Move);
+        EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyPlayerController::Move);
+        EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AMyPlayerController::Move);
     }
 }
 
 void AMyPlayerController::Move(const FInputActionValue &Value)
 {
-    // if(AMyBall* Ball = Cast<AMyBall>(PlayerPawn))
-        // Ball->Move();
+    if(AMyBall* Ball = Cast<AMyBall>(PlayerPawn))
+        Ball->Move(Value.Get<FVector2D>());
 }
 
 void AMyPlayerController::Jump(const FInputActionValue &Value)
