@@ -21,7 +21,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UStaticMeshComponent MeshComponent;
+	UStaticMeshComponent* MeshComponent;
+	FBodyInstance* BodyInstance;
 
 public:	
 	// Called every frame
@@ -29,8 +30,40 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	
+	UFUNCTION()
 	void Move(FVector& MovementVector);
-
+	
+	UFUNCTION()
 	void Jump();
+	
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UPROPERTY(EditAnywhere, Category = "Ball|Ground Movement")
+	float GroundSpeed = 1000.0f;
+	bool isUsingMaxGroundSpeed = true;
+	float maxGroundSpeed = 25.f;
+	float groundDesceleration = 10.f;
+
+	UPROPERTY(EditAnywhere, Category = "Ball|Air Movement")
+	float AirSpeed = 1000.0f;
+	bool isUsingMaxAirSpeed = true;
+	float maxAirSpeed = 25.f;
+	float airDesceleration = 10.f;
+
+	UPROPERTY(EditAnywhere, Category = "Ball|Jump")
+	float JumpHeight = 1000.0f;
+	float DoubleJumpHeight = 1000.0f;
+
+private:
+	FVector MovementDirection = FVector::ZeroVector;
+	bool IsMoving = false;
+	bool wasMoving = false;
+	float h = 0;
+	float v = 0;
+	bool isGrounded = true;
+	bool hasDoubleJumped = false;
+	float Mass = 1.0f;
+	FVector inputVector = FVector::ZeroVector;
 };
