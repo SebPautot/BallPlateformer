@@ -40,6 +40,12 @@ public:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 	UPROPERTY(EditAnywhere, Category = "Ball|Gravity")
 	float GravityMultiplier = 2.0f;
 
@@ -76,4 +82,5 @@ private:
 	bool hasDoubleJumped = false;
 	float Mass = 1.0f;
 	FVector inputVector = FVector::ZeroVector;
+	AActor* GroundActor = nullptr;
 };

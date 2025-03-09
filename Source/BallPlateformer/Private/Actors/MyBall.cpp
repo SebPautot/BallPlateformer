@@ -23,6 +23,8 @@ AMyBall::AMyBall()
 	// enable hit event generation
 	MeshComponent->SetGenerateOverlapEvents(true);
 	MeshComponent->OnComponentHit.AddDynamic(this, &AMyBall::OnHit);
+	MeshComponent->OnComponentBeginOverlap.AddDynamic(this, &AMyBall::OnOverlapBegin);
+	MeshComponent->OnComponentEndOverlap.AddDynamic(this, &AMyBall::OnOverlapEnd);
 
 	// Disable rotation
 	MeshComponent->BodyInstance.bLockXRotation = true;
@@ -136,5 +138,51 @@ void AMyBall::OnHit(UPrimitiveComponent *HitComponent, AActor *OtherActor, UPrim
 	{
 		isGrounded = true;
 		hasDoubleJumped = false;
+	}
+}
+
+void AMyBall::OnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
+{
+
+	if (OtherComp && OtherComp->GetCollisionEnabled() == ECollisionEnabled::NoCollision)
+		return;
+
+	if(FVector::DotProduct(SweepResult.Normal, GetActorUpVector()) > 0.9f)
+	{
+		isGrounded = true;
+		hasDoubleJumped = false;
+		GroundActor = OtherActor;
+	}
+}
+
+void AMyBall::OnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
+{
+
+	if (OtherComp && OtherComp->GetCollisionEnabled() == ECollisionEnabled::NoCollision)
+		return;
+
+	if(OtherActor == GroundActor)
+	{
+		// unground
+		isGrounded = false;
+		GroundActor = nullptr;
+
+		//check if we are still grounded
+
+		for(const FOverlapInfo& info : MeshComponent->GetOverlapInfos())
+		{
+			if(info.OverlapInfo.Component == OtherComp)
+			{
+				continue;
+			}
+
+			if(FVector::DotProduct(info.OverlapInfo.Normal, GetActorUpVector()) > 0.9f)
+			{
+				isGrounded = true;
+				hasDoubleJumped = false;
+				GroundActor = info.OverlapInfo.GetActor();
+				break;
+			}
+		}
 	}
 }
