@@ -13,7 +13,6 @@ AMyBall::AMyBall()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 	if (SphereMesh.Succeeded())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SphereMesh loaded"));
 		MeshComponent->SetStaticMesh(SphereMesh.Object);
 	}
 	BodyInstance = MeshComponent->GetBodyInstance();
@@ -74,8 +73,8 @@ void AMyBall::Tick(float DeltaTime)
 	float desceleration = isGrounded ? groundDesceleration : airDesceleration;
 	bool isUsingMaxSpeed = isGrounded ? isUsingMaxGroundSpeed : isUsingMaxAirSpeed;
 
-	FVector velocityDirection = GetVelocity().GetSafeNormal();
 	FVector velocity = GetVelocity();
+	FVector velocityDirection = GetVelocity().GetSafeNormal();
 	velocity.Z = 0;
 
 	// apply drag
@@ -108,7 +107,7 @@ void AMyBall::Tick(float DeltaTime)
 
 	// add gravity still posseslime vibes
 	GravityDirection.Normalize();
-	FVector gravity = GravityDirection * Gravity * GravityMultiplier * Mass * 1000.f; // no deltatime because it's already applied in the physics engine through addforce
+	FVector gravity = GravityDirection * Gravity * GravityMultiplier * Mass * 100.f; // no deltatime because it's already applied in the physics engine through addforce
 
 	BodyInstance->AddForce(gravity);
 
@@ -129,16 +128,12 @@ void AMyBall::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 
 void AMyBall::Move(const FVector2D &MovementVector)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Move"));
-	UE_LOG(LogTemp, Warning, TEXT("MovementVector: %s"), *MovementVector.ToString());
-
 	inputVector = FVector(MovementVector.X, MovementVector.Y, 0);
 	inputVector.Normalize();
 }
 
 void AMyBall::Jump()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Jump"));
 
 	if (isGrounded)
 	{
@@ -176,19 +171,14 @@ void AMyBall::OnHit(UPrimitiveComponent *HitComponent, AActor *OtherActor, UPrim
 			GroundedActor = OtherActor;
 			GroundedActorPreviousLocation = OtherActor->GetActorLocation();
 		}
-
-		UE_LOG(LogTemp, Warning, TEXT("Hit Ground Normal: %s"), *hitNormal.ToString());
 	}
 	else if (FVector::DotProduct(hitNormal, upVector * -1) > 0.9f)
 	{
 		isOnCeiling = true;
-
-		UE_LOG(LogTemp, Warning, TEXT("Hit Ceiling Normal: %s"), *hitNormal.ToString());
 	}
 	else
 	{
 		isOnWall = true;
 		wallNormal = hitNormal;
-		UE_LOG(LogTemp, Warning, TEXT("Hit Wall Normal: %s"), *hitNormal.ToString());
 	}
 }
