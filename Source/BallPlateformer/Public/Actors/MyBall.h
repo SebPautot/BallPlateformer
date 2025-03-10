@@ -40,14 +40,12 @@ public:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
-	UFUNCTION()
-	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
+	UPROPERTY(EditAnywhere, Category = "Ball|Gravity")
+	float Gravity = 9.8f;
 	UPROPERTY(EditAnywhere, Category = "Ball|Gravity")
 	float GravityMultiplier = 2.0f;
+	UPROPERTY(EditAnywhere, Category = "Ball|Gravity")
+	FVector GravityDirection = FVector(0, 0, -1);
 
 	UPROPERTY(EditAnywhere, Category = "Ball|Ground Movement")
 	float GroundSpeed = 1000.0f;
@@ -71,6 +69,10 @@ public:
 	float JumpHeight = 1000.0f;
 	UPROPERTY(EditAnywhere, Category = "Ball|Jump")
 	float DoubleJumpHeight = 1000.0f;
+	UPROPERTY(EditAnywhere, Category = "Ball|Wall Jump")
+	float WallJumpForce = 1000.0f;
+	UPROPERTY(EditAnywhere, Category = "Ball|Wall Jump")
+	float WallJumpHeight = 1000.0f;
 
 private:
 	FVector MovementDirection = FVector::ZeroVector;
@@ -78,7 +80,15 @@ private:
 	bool wasMoving = false;
 	float h = 0;
 	float v = 0;
-	bool isGrounded = true;
+	bool isGrounded = false;
+	bool wasGrounded = false;
+	AActor* GroundedActor = nullptr;
+	FVector GroundedActorPreviousLocation = FVector::ZeroVector;
+	bool isOnWall = false;
+	bool wasOnWall = false;
+	FVector wallNormal = FVector::ZeroVector;
+	bool isOnCeiling = false;
+	bool wasOnCeiling = false;
 	bool hasDoubleJumped = false;
 	float Mass = 1.0f;
 	FVector inputVector = FVector::ZeroVector;

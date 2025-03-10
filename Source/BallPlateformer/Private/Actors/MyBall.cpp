@@ -23,15 +23,20 @@ AMyBall::AMyBall()
 	// enable hit event generation
 	MeshComponent->SetGenerateOverlapEvents(true);
 	MeshComponent->OnComponentHit.AddDynamic(this, &AMyBall::OnHit);
-	MeshComponent->OnComponentBeginOverlap.AddDynamic(this, &AMyBall::OnOverlapBegin);
-	MeshComponent->OnComponentEndOverlap.AddDynamic(this, &AMyBall::OnOverlapEnd);
+	MeshComponent->SetCollisionProfileName(TEXT("PhysicsActor"));
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
+	MeshComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block);
+	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
 
 	// Disable rotation
 	MeshComponent->BodyInstance.bLockXRotation = true;
 	MeshComponent->BodyInstance.bLockYRotation = true;
 	MeshComponent->BodyInstance.bLockZRotation = true;
 
-	//Remove resistance from physics material
+	// Remove resistance from physics material
 	MeshComponent->SetLinearDamping(0.0f);
 	MeshComponent->SetAngularDamping(0.0f);
 
@@ -52,7 +57,17 @@ void AMyBall::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//getting posseslime vibes from this code
+	if(!isGrounded)
+	{
+		GroundedActor = nullptr;
+	}else if(GroundedActor != nullptr){
+		FVector NewLocation = GetActorLocation() - GroundedActorPreviousLocation; // The currentLoc - A part of the equation | pretty way of saying NewLoc = CurrentLoc + (B - A)
+		GroundedActorPreviousLocation = GroundedActor->GetActorLocation(); // A becomes B
+		NewLocation += GroundedActorPreviousLocation; // + B
+		SetActorLocation(NewLocation); // NewLoc = CurrentLoc + (B - A)
+	}
+
+	// getting posseslime vibes from this code
 
 	float currentSpeed = isGrounded ? GroundSpeed : AirSpeed;
 	float maxSpeed = isGrounded ? maxGroundSpeed : maxAirSpeed;
@@ -66,7 +81,7 @@ void AMyBall::Tick(float DeltaTime)
 	// apply drag
 	FVector drag = velocityDirection * desceleration;
 	FVector newVelocity = velocity - drag * DeltaTime;
-	
+
 	// evaluate new velocity, to know if velocity changed direction due to drag
 	if (FVector::DotProduct(velocity, newVelocity) < 0)
 	{
@@ -92,8 +107,18 @@ void AMyBall::Tick(float DeltaTime)
 	}
 
 	// add gravity still posseslime vibes
-	FVector gravity = FVector(0, 0, GetWorld()->GetGravityZ() * GravityMultiplier);
+	GravityDirection.Normalize();
+	FVector gravity = GravityDirection * Gravity * GravityMultiplier * Mass * 1000.f; // no deltatime because it's already applied in the physics engine through addforce
+
 	BodyInstance->AddForce(gravity);
+
+	wasGrounded = isGrounded;
+	wasOnWall = isOnWall;
+	wasOnCeiling = isOnCeiling;
+	// physics variables reset to their OG value so they can be used and filled-in in the next frame by OnHit
+	isGrounded = false;
+	isOnWall = false;
+	isOnCeiling = false;
 }
 
 // Called to bind functionality to input
@@ -121,6 +146,13 @@ void AMyBall::Jump()
 		BodyInstance->AddImpulse(jumpImpulse, true);
 		isGrounded = false;
 	}
+	else if (isOnWall)
+	{
+		FVector jumpImpulse = FVector(0, 0, (/* sqrt(-2.f * gravity * jumpheight)*/ FMath::Sqrt(FMath::Abs(2.f * GetWorld()->GetGravityZ() * WallJumpHeight * Mass))));
+		jumpImpulse += wallNormal * WallJumpForce;
+		BodyInstance->AddImpulse(jumpImpulse, true);
+		isOnWall = false;
+	}
 	else if (!hasDoubleJumped)
 	{
 		FVector jumpImpulse = FVector(0, 0, (/* sqrt(-2.f * gravity * jumpheight)*/ FMath::Sqrt(FMath::Abs(2.f * GetWorld()->GetGravityZ() * DoubleJumpHeight * Mass))));
@@ -131,58 +163,32 @@ void AMyBall::Jump()
 
 void AMyBall::OnHit(UPrimitiveComponent *HitComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, FVector NormalImpulse, const FHitResult &Hit)
 {
-	// dot product to know if we are grounded
+	// dot product to know if we are grounded, on a wall or on a ceiling
 	FVector hitNormal = Hit.Normal;
 	FVector upVector = GetActorUpVector();
 	if (FVector::DotProduct(hitNormal, upVector) > 0.9f)
 	{
 		isGrounded = true;
 		hasDoubleJumped = false;
-	}
-}
 
-void AMyBall::OnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
-{
-
-	if (OtherComp && OtherComp->GetCollisionEnabled() == ECollisionEnabled::NoCollision)
-		return;
-
-	if(FVector::DotProduct(SweepResult.Normal, GetActorUpVector()) > 0.9f)
-	{
-		isGrounded = true;
-		hasDoubleJumped = false;
-		GroundActor = OtherActor;
-	}
-}
-
-void AMyBall::OnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
-{
-
-	if (OtherComp && OtherComp->GetCollisionEnabled() == ECollisionEnabled::NoCollision)
-		return;
-
-	if(OtherActor == GroundActor)
-	{
-		// unground
-		isGrounded = false;
-		GroundActor = nullptr;
-
-		//check if we are still grounded
-
-		for(const FOverlapInfo& info : MeshComponent->GetOverlapInfos())
+		if(!wasGrounded)
 		{
-			if(info.OverlapInfo.Component == OtherComp)
-			{
-				continue;
-			}
-
-			if(FVector::DotProduct(info.OverlapInfo.Normal, GetActorUpVector()) > 0.9f)
-			{
-				isGrounded = true;
-				hasDoubleJumped = false;
-				GroundActor = info.OverlapInfo.GetActor();
-				break;
-			}
+			GroundedActor = OtherActor;
+			GroundedActorPreviousLocation = OtherActor->GetActorLocation();
 		}
+
+		UE_LOG(LogTemp, Warning, TEXT("Hit Ground Normal: %s"), *hitNormal.ToString());
+	}
+	else if (FVector::DotProduct(hitNormal, upVector * -1) > 0.9f)
+	{
+		isOnCeiling = true;
+
+		UE_LOG(LogTemp, Warning, TEXT("Hit Ceiling Normal: %s"), *hitNormal.ToString());
+	}
+	else
+	{
+		isOnWall = true;
+		wallNormal = hitNormal;
+		UE_LOG(LogTemp, Warning, TEXT("Hit Wall Normal: %s"), *hitNormal.ToString());
 	}
 }
