@@ -50,6 +50,7 @@ void AMyBall::BeginPlay()
 	// set mass to 1
 	MeshComponent->SetMassOverrideInKg(NAME_None, 1.0f, true);
 	initialGravityDirection = GravityDirection;
+	baseRotation = GetActorRotation();
 }
 
 // Called every frame

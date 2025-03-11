@@ -74,6 +74,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Ball|Wall Jump")
 	float WallJumpHeight = 1000.0f;
 
+	FRotator baseRotation;
 private:
 	FVector MovementDirection = FVector::ZeroVector;
 	bool IsMoving = false;
