@@ -93,4 +93,5 @@ private:
 	float Mass = 1.0f;
 	FVector inputVector = FVector::ZeroVector;
 	AActor* GroundActor = nullptr;
+	FVector initialGravityDirection = FVector::ZeroVector;
 };

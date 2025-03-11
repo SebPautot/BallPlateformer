@@ -48,6 +48,8 @@ void UGravityModifier::OnOverlapBegin(UPrimitiveComponent * OverlappedComponent,
 		ball->GravityMultiplier += GravityPreMultiplyAddition;
 		ball->GravityMultiplier *= GravityMultiplier;
 		ball->GravityMultiplier += GravityPostMultiplyAddition;
+		if (SetGravityDirection)
+			ball->GravityDirection = GetOwner()->GetActorUpVector() * -1;
 	}
 }
 
@@ -60,5 +62,7 @@ void UGravityModifier::OnOverlapEnd(UPrimitiveComponent * OverlappedComponent, A
 		ball->GravityMultiplier -= GravityPostMultiplyAddition;
 		ball->GravityMultiplier /= GravityMultiplier;
 		ball->GravityMultiplier -= GravityPreMultiplyAddition;
+		if (ball->GravityDirection == (GetOwner()->GetActorUpVector() * -1) && SetGravityDirection)
+			ball->GravityDirection = FVector::ZeroVector;
 	}
 }

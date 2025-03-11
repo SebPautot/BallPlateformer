@@ -49,6 +49,7 @@ void AMyBall::BeginPlay()
 	Super::BeginPlay();
 	// set mass to 1
 	MeshComponent->SetMassOverrideInKg(NAME_None, 1.0f, true);
+	initialGravityDirection = GravityDirection;
 }
 
 // Called every frame
@@ -106,6 +107,10 @@ void AMyBall::Tick(float DeltaTime)
 	}
 
 	// add gravity still posseslime vibes
+	if(GravityDirection == FVector::ZeroVector)
+	{
+		GravityDirection = initialGravityDirection;
+	}
 	GravityDirection.Normalize();
 	FVector gravity = GravityDirection * Gravity * GravityMultiplier * Mass * 100.f; // no deltatime because it's already applied in the physics engine through addforce
 
